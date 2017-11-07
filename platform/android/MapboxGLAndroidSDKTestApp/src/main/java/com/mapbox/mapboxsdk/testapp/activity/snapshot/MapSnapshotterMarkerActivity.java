@@ -9,14 +9,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
-
 import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.snapshotter.MapSnapshot;
 import com.mapbox.mapboxsdk.snapshotter.MapSnapshotter;
 import com.mapbox.mapboxsdk.testapp.R;
-
 import timber.log.Timber;
 
 /**
@@ -24,6 +22,8 @@ import timber.log.Timber;
  * {@link android.graphics.Bitmap}s on top.
  */
 public class MapSnapshotterMarkerActivity extends AppCompatActivity implements MapSnapshotter.SnapshotReadyCallback {
+
+  private MapSnapshotter mapSnapshotter;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -40,16 +40,22 @@ public class MapSnapshotterMarkerActivity extends AppCompatActivity implements M
 
           Timber.i("Starting snapshot");
 
-          MapSnapshotter mapSnapshotter = new MapSnapshotter(
+          mapSnapshotter = new MapSnapshotter(
             getApplicationContext(),
             new MapSnapshotter
               .Options(Math.min(container.getMeasuredWidth(), 1024), Math.min(container.getMeasuredHeight(), 1024))
-              .withStyle(Style.TRAFFIC_DAY)
+              .withStyle(Style.SATELLITE_STREETS)
               .withCameraPosition(new CameraPosition.Builder().target(new LatLng(52.090737, 5.121420)).zoom(15).build())
           );
           mapSnapshotter.start(MapSnapshotterMarkerActivity.this);
         }
       });
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    mapSnapshotter.cancel();
   }
 
   @Override
