@@ -1383,7 +1383,7 @@ public:
         double newZoom = log2(newScale);
 
         // Calculates the final camera zoom, has no effect within current map camera.
-        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:centerPoint];
+        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:centerPoint inView:pinch.view];
         
         if (![self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)] ||
             [self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
@@ -1437,7 +1437,7 @@ public:
         
         // Calculates the final camera zoom, this has no effect within current map camera.
         double zoom = log2(newScale);
-        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:zoom aroundAnchorPoint:centerPoint];
+        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:zoom aroundAnchorPoint:centerPoint inView:pinch.view];
         
         if ([self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)]
             && ![self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
@@ -1658,7 +1658,7 @@ public:
 
         CGPoint gesturePoint = [self anchorPointForGesture:doubleTap];
 
-        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:gesturePoint];
+        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:gesturePoint inView:doubleTap.view];
         
         if (![self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)] ||
             [self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
@@ -1700,7 +1700,7 @@ public:
 
         CGPoint gesturePoint = [self anchorPointForGesture:twoFingerTap];
 
-        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:gesturePoint];
+        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:gesturePoint inView:twoFingerTap.view];
         
         if (![self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)] ||
             [self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
@@ -1745,7 +1745,7 @@ public:
         CGPoint centerPoint = [self anchorPointForGesture:quickZoom];
         
         MGLMapCamera *oldCamera = self.camera;
-        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:centerPoint];
+        MGLMapCamera *toCamera = [self cameraByZoomingToZoomLevel:newZoom aroundAnchorPoint:centerPoint inView:quickZoom.view];
         
         if (![self.delegate respondsToSelector:@selector(mapView:shouldChangeFromCamera:toCamera:)] ||
             [self.delegate mapView:self shouldChangeFromCamera:oldCamera toCamera:toCamera])
@@ -1816,7 +1816,7 @@ public:
     return panCamera;
 }
 
-- (MGLMapCamera *)cameraByZoomingToZoomLevel:(double)zoom  aroundAnchorPoint:(CGPoint)anchorPoint
+- (MGLMapCamera *)cameraByZoomingToZoomLevel:(double)zoom aroundAnchorPoint:(CGPoint)anchorPoint inView:(UIView *)view
 {
     mbgl::EdgeInsets padding = MGLEdgeInsetsFromNSEdgeInsets(self.contentInset);
     mbgl::CameraOptions currentCameraOptions = _mbglMap->getCameraOptions(padding);
@@ -1826,6 +1826,10 @@ public:
     currentCameraOptions.zoom = mbgl::util::clamp(zoom, self.minimumZoomLevel, self.maximumZoomLevel);
     currentCameraOptions.anchor = anchor;
     camera = [self cameraForCameraOptions:currentCameraOptions];
+    
+    CLLocationCoordinate2D centerCoordinate = [self convertPoint:anchorPoint toCoordinateFromView:view];
+    
+    camera.centerCoordinate = centerCoordinate;
     
     return camera;
 }
